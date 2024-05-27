@@ -86,18 +86,6 @@ jobs:
         run: |
           echo "${{secret.SHELL_SCRIPT_TEMPLATE}}" > update_instance.sh
           cat update_instance.sh
-
-      - name: Retrieve Autoscaling EC2 server IPs
-        id: get_autoscaling_instances_ips
-        run: |
-          aws autoscaling describe-auto-scaling-instances --query "AutoScalingInstances[*].InstanceId" --output text > autoscaling_instance_ids.txt 
-          aws ec2 describe-instances --instance-ids $(cat autoscaling_instance_ids.txt) --query "Reservations[*].Instances[*].PublicIpAddress" --output text > autoscaling_instance_ips.txt
-          cat autoscaling_instance_ips.txt
-
-
-      - name: Update Autoscaling EC2 with new Docker image
-        run: |
-          cat autoscaling_instance_ips.txt
           
           
           
