@@ -87,6 +87,8 @@ jobs:
       - name: Retrieve Autoscaling EC2 server ips
         id: get_autoscaling_instances_ips
         run: |
+          # Retrieve all instance IDs from Auto Scaling groups
+          aws autoscaling describe-auto-scaling-instances --query "AutoScalingInstances[*].InstanceId" --output text > autoscaling_instance_ids.txt
           aws ec2 describe-instances --instance-ids $(cat autoscaling_instance_ids.txt) --query "Reservations[*].Instances[*].PublicIpAddress" --output text > autoscaling_instance_ips.txt  << EOF
           ips_file="autoscaling_instance_ips.txt"
           IFS=$'\n' read -d '' -r -a ips < "$ips_file"
