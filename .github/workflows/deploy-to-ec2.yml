@@ -97,16 +97,7 @@ jobs:
       - name: Update Autoscaling EC2 with new Docker image
         run: |
           cat autoscaling_instance_ips.txt
-          ips_file="autoscaling_instance_ips.txt"
-          IFS=$'\n' read -d '' -r -a ips < "$ips_file"
-          for i in "${!ips[@]}"; do
-            ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@${ips[i]} << 'EOF'
-              docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
-              docker stop my-container || true
-              docker rm my-container || true
-              docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
-            EOF
-          done
+          
           
           
 
