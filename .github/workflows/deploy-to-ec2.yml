@@ -69,7 +69,7 @@ jobs:
               docker stop my-container || true
               docker rm my-container || true
               docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
-            EOF
+             EOF
           done
 
       - name: Retrieve Autoscaling EC2 instance IDs
