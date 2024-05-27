@@ -64,12 +64,12 @@ jobs:
       - name: Update EC2 with new Docker image
         run: |
           for ip in ${{ env.EC2_1_IP }} ${{ env.EC2_2_IP }} ${{ env.EC2_3_IP }}; do
-            ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@$ip << EOF
+            ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@$ip << 'EOF'
               docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
               docker stop my-container || true
               docker rm my-container || true
               docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
-             EOF
+         EOF
           done
 
       - name: Retrieve Autoscaling EC2 instance IDs
@@ -93,10 +93,10 @@ jobs:
           ips_file="autoscaling_instance_ips.txt"
           IFS=$'\n' read -d '' -r -a ips < "$ips_file"
           for ip in "${ips[@]}"; do
-            ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@$ip << EOF
+            ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@$ip << 'EOF'
               docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
               docker stop my-container || true
               docker rm my-container || true
               docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
-            EOF
+         EOF
           done
