@@ -92,20 +92,7 @@ jobs:
           aws autoscaling describe-auto-scaling-instances --query "AutoScalingInstances[*].InstanceId" --output text > autoscaling_instance_ids.txt 
           aws ec2 describe-instances --instance-ids $(cat autoscaling_instance_ids.txt) --query "Reservations[*].Instances[*].PublicIpAddress" --output text > autoscaling_instance_ips.txt
           cat autoscaling_instance_ips.txt
-          ips_file="autoscaling_instance_ips.txt"
-          IFS=$'\n' read -d '' -r -a ips < "$ips_file"
-          for i in "${!ips[@]}"; do
-            echo "Auto_Instance_IP_$((i+1)): ${ips[i]}" >> $GITHUB_ENV
-            touch update_instance_$((i+1)).sh
-            # copy the shell script template to the new file
-            cp update_instance.sh update_instance_$((i+1)).sh
-            # replace the placeholder with the actual IP
-            sed -i "s/IP_PLACEHOLDER/${ips[i]}/g" update_instance_$((i+1)).sh
-            # make the new file executable
-            chmod +x update_instance_$((i+1)).sh
-           # show the content of the new file
-            cat update_instance_$((i+1)).sh
-          done
+
 
       - name: Update Autoscaling EC2 with new Docker image
         run: |
