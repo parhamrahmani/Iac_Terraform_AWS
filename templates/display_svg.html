@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Infrastructure Project Diagram</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <a href="/documentation">Documentation</a>
+            <a href="/diagram">Diagram</a>
+        </nav>
+    </header>
+    <div class="content">
+        <h1>IT Infrastructure Diagram</h1>
+        <div>{{ svg_data|safe }}</div>
+    </div>
+    <footer>
+        <p>&copy; 2024 IT Infrastructure Documentation by Parham Rahmani</p>
+    </footer>
+</body>
+</html>

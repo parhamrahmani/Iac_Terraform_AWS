@@ -1,0 +1,111 @@
+# CI/CD pipeline to deploy a Flask app to AWS EC2 instances and Autoscaling EC2 instances
+name: Build and Deploy to AWS
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build and push Docker image of Flask app
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./flask.Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
+          build-args: |
+            FLASK_KEY=${{ secrets.FLASK_KEY }}
+            SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }}
+            SPOTIFY_SECRET_ID=${{ secrets.SPOTIFY_SECRET_ID }}
+            ENVIRONMENT=${{ secrets.ENVIRONMENT }}
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Retrieve EC2 instance IP
+        id: get_instances_ips
+        run: |
+          aws ec2 describe-instances --filters "Name=tag:Name,Values=ec2-1" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].PublicIpAddress" --output text > ec2_instance_ip.txt
+          echo "EC2_1_IP=$(cat ec2_instance_ip.txt)" >> $GITHUB_ENV
+          aws ec2 describe-instances --filters "Name=tag:Name,Values=ec2-2" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].PublicIpAddress" --output text > ec2_instance_ip.txt
+          echo "EC2_2_IP=$(cat ec2_instance_ip.txt)" >> $GITHUB_ENV
+          aws ec2 describe-instances --filters "Name=tag:Name,Values=ec2-3" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].PublicIpAddress" --output text > ec2_instance_ip.txt
+          echo "EC2_3_IP=$(cat ec2_instance_ip.txt)" >> $GITHUB_ENV
+
+      - name: Create .ssh directory
+        run: mkdir -p /home/runner/.ssh
+
+      - name: Create SSH key file
+        run: echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_rsa
+
+      - name: Set SSH key permissions
+        run: chmod 600 /home/runner/.ssh/id_rsa
+
+      - name: Update EC2 with new Docker image
+        run: |
+          
+          
+          ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@${{ env.EC2_1_IP }} << EOF
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
+            docker stop my-container || true
+            docker rm my-container || true
+            docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
+          EOF
+          ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@${{ env.EC2_2_IP }} << EOF
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
+            docker stop my-container || true
+            docker rm my-container || true
+            docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
+          EOF
+            ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@${{ env.EC2_3_IP }} << EOF
+                docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
+                docker stop my-container || true
+                docker rm my-container || true
+                docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
+
+
+      - name: Retrieve Autoscaling EC2 server ips
+        id: get_autoscaling_instances_ips
+        run: |
+          aws ec2 describe-instances --instance-ids $(cat autoscaling_instance_ids.txt) --query "Reservations[*].Instances[*].PublicIpAddress" --output text > autoscaling_instance_ips.txt  << EOF
+          ips_file="autoscaling_instance_ips.txt"
+          IFS=$'\n' read -d '' -r -a ips < "$ips_file"
+          for i in "${!ips[@]}"; do
+            echo "Auto_Instance_ID_$((i+1)): ${ids[i]}" >> $GITHUB_ENV
+            echo "Auto_Instance_IP_$((i+1)): ${ips[i]}" >> $GITHUB_ENV
+          done
+          EOF
+      - name: Update Autoscaling EC2 with new Docker image
+        run: |       
+          aws ec2 describe-instances --instance-ids $(cat autoscaling_instance_ids.txt) --query "Reservations[*].Instances[*].PublicIpAddress" --output text > autoscaling_instance_ips.txt  << EOF
+          ips_file="autoscaling_instance_ips.txt"
+          IFS=$'\n' read -d '' -r -a ips < "$ips_file"
+            for i in "${!ips[@]}"; do
+                ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@${ips[i]} << EOF
+                docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
+                docker stop my-container || true
+                docker rm my-container || true
+                docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
+                EOF
+            done
+

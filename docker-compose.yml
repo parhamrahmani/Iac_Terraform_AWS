@@ -1,0 +1,18 @@
+services:
+  infra-test:
+    build:
+      context: .
+      dockerfile: flask.Dockerfile
+    ports:
+      - "5000:5000"
+  database:
+    build:
+      context: .
+      dockerfile: database.Dockerfile
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE: ${MYSQL_DATABASE}
+      - MYSQL_USER: ${MYSQL_USER}
+      - MYSQL_PASSWORD: ${MYSQL_PASSWORD}
