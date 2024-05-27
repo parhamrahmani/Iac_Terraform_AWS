@@ -25,7 +25,7 @@ REDIRECT_URI_LOCAL = 'http://127.0.0.1:5000/callback'
 REDIRECT_URI_REMOTE = 'http://18.156.114.112/callback'
 REDIRECT_URI = REDIRECT_URI_REMOTE if ENVIRONMENT == 'production' else REDIRECT_URI_LOCAL
 SCOPE = ('user-read-private user-read-email user-library-read user-top-read playlist-modify-public '
-          'playlist-modify-private')
+         'playlist-modify-private')
 
 STATE_KEY = 'spotify_auth_state'
 AUTH_URL = 'https://accounts.spotify.com/authorize'
@@ -36,6 +36,11 @@ API_BASE_URL = 'https://api.spotify.com/v1/'
 @app.route("/")
 def index():
     return render_template('welcome.html')
+
+
+@app.route("/logout")
+def logout():
+    return redirect('/')
 
 
 @app.route("/home")
@@ -178,11 +183,8 @@ def get_top_tracks():
                         status=response.status_code, mimetype='application/json')
 
 
-
-
-
-
 API_BASE_URL = 'https://api.spotify.com/v1/'
+
 
 @app.route("/recommendations", methods=['GET'])
 def get_recommendations():
@@ -199,7 +201,8 @@ def get_recommendations():
     top_tracks_response = requests.get(f"{API_BASE_URL}me/top/tracks?limit=5&time_range=short_term", headers=headers)
 
     if top_tracks_response.status_code != 200:
-        return Response(top_tracks_response.content, status=top_tracks_response.status_code, mimetype='application/json')
+        return Response(top_tracks_response.content, status=top_tracks_response.status_code,
+                        mimetype='application/json')
 
     top_tracks_data = top_tracks_response.json()
     seed_tracks = ','.join([track['id'] for track in top_tracks_data['items']])
@@ -247,7 +250,8 @@ def get_recommendations():
         return Response(recommendations_response.content, mimetype='application/json')
     else:
         print(f"Error from Spotify API: {recommendations_response.content}")
-        return Response(recommendations_response.content, status=recommendations_response.status_code, mimetype='application/json')
+        return Response(recommendations_response.content, status=recommendations_response.status_code,
+                        mimetype='application/json')
 
 
 @app.route("/create_playlist", methods=['POST'])
@@ -264,7 +268,8 @@ def create_playlist():
     )
 
     if user_profile_response.status_code != 200:
-        return Response(user_profile_response.content, status=user_profile_response.status_code, mimetype='application/json')
+        return Response(user_profile_response.content, status=user_profile_response.status_code,
+                        mimetype='application/json')
 
     user_profile_data = user_profile_response.json()
     user_id = user_profile_data['id']
@@ -285,7 +290,8 @@ def create_playlist():
     )
 
     if create_playlist_response.status_code != 201:
-        return Response(create_playlist_response.content, status=create_playlist_response.status_code, mimetype='application/json')
+        return Response(create_playlist_response.content, status=create_playlist_response.status_code,
+                        mimetype='application/json')
 
     playlist_data = create_playlist_response.json()
     playlist_id = playlist_data['id']
@@ -304,7 +310,8 @@ def create_playlist():
     )
 
     if add_tracks_response.status_code != 201:
-        return Response(add_tracks_response.content, status=add_tracks_response.status_code, mimetype='application/json')
+        return Response(add_tracks_response.content, status=add_tracks_response.status_code,
+                        mimetype='application/json')
 
     return jsonify({'message': 'Playlist created successfully', 'playlist_id': playlist_id})
 
