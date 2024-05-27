@@ -88,6 +88,7 @@ jobs:
           aws autoscaling describe-auto-scaling-instances --query "AutoScalingInstances[*].InstanceId" --output text > autoscaling_instance_ids.txt 
           aws ec2 describe-instances --instance-ids $(cat autoscaling_instance_ids.txt) --query "Reservations[*].Instances[*].PublicIpAddress" --output text > autoscaling_instance_ips.txt
           cat autoscaling_instance_ips.txt
+          << EOF
           ips_file="autoscaling_instance_ips.txt"
           IFS=$'\n' read -d '' -r -a ips < "$ips_file"
           for i in "${!ips[@]}"; do
@@ -97,6 +98,7 @@ jobs:
       - name: Update Autoscaling EC2 with new Docker image
         run: |
           ips_file="autoscaling_instance_ips.txt"
+          cat autoscaling_instance_ips.txt
           IFS=$'\n' read -d '' -r -a ips < "$ips_file"
           for ip in "${ips[@]}"; do
             ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@$ip << 'EOF'
