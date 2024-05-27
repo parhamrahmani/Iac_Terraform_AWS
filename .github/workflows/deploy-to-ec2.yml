@@ -82,7 +82,7 @@ jobs:
                 docker stop my-container || true
                 docker rm my-container || true
                 docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
-          EOF
+          
 
 
       - name: Retrieve Autoscaling EC2 server ips
@@ -100,7 +100,7 @@ jobs:
             echo "Auto_Instance_ID_$((i+1)): ${ids[i]}" >> $GITHUB_ENV
             echo "Auto_Instance_IP_$((i+1)): ${ips[i]}" >> $GITHUB_ENV
           done
-          EOF
+
       - name: Update Autoscaling EC2 with new Docker image
         run: |       
           # Retrieve all instance IDs from Auto Scaling groups
@@ -119,6 +119,6 @@ jobs:
                 docker rm my-container || true
                 docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
                 
-            done
-         EOF
+           done
+         
 
