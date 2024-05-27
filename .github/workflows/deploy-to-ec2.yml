@@ -83,15 +83,7 @@ jobs:
           EOF
       - name: Make shell script template for updating autoscaling instances
         run: |
-          cat << EOF > update_instance.sh
-          #!/bin/bash
-          ip=$1
-          ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@$ip << 'EOF'
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
-            docker stop my-container || true
-            docker rm my-container || true
-            docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
-          EOF
+          echo "${{secret.SHELL_SCRIPT_TEMPLATE}}" > update_instance.sh
           cat update_instance.sh
 
       - name: Retrieve Autoscaling EC2 server IPs
