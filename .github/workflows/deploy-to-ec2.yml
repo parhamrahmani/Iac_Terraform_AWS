@@ -81,7 +81,7 @@ jobs:
             docker rm my-container || true
             docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
           EOF
-      - name: Make shell script template
+      - name: Make shell script template for updating autoscaling instances
         run: |
           cat << EOF > update_instance.sh
           #!/bin/bash
@@ -106,6 +106,15 @@ jobs:
           for i in "${!ips[@]}"; do
             echo "Auto_Instance_IP_$((i+1)): ${ips[i]}" >> $GITHUB_ENV
             touch update_instance_$((i+1)).sh
+            # copy the shell script template to the new file
+            cp update_instance.sh update_instance_$((i+1)).sh
+            # replace the placeholder with the actual IP
+            sed -i "s/IP_PLACEHOLDER/${ips[i]}/g" update_instance_$((i+1)).sh
+            # make the new file executable
+            chmod +x update_instance_$((i+1)).sh
+           # show the content of the new file
+            cat update_instance_$((i+1)).sh
+           
             
           done
 
