@@ -81,6 +81,7 @@ jobs:
             docker rm my-container || true
             docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
           EOF
+
       - name: Make shell script template for updating autoscaling instances
         run: |
           echo "${{secret.SHELL_SCRIPT_TEMPLATE}}" > update_instance.sh
