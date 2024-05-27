@@ -106,6 +106,7 @@ jobs:
           done
 
 
+
       - name: Update Autoscaling EC2 with new Docker image
         run: |
           cat autoscaling_instance_ips.txt
