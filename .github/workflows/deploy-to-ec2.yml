@@ -92,7 +92,7 @@ jobs:
           aws ec2 describe-instances --instance-ids $(cat autoscaling_instance_ids.txt) --query "Reservations[*].Instances[*].PublicIpAddress" --output text > autoscaling_instance_ips.txt
           cat autoscaling_instance_ips.txt
           ips_file="autoscaling_instance_ips.txt"
-          IFS=$'\n' read -r -a ips < "$ips_file"
+          mapfile -t ips < "$ips_file"          
           # Debug output to verify IPs
           echo "IP addresses read from file:"
           for ip in "${ips[@]}"; do
