@@ -96,7 +96,7 @@ jobs:
           # Debug output to verify IPs
           echo "IP addresses read from file:"
           for ip in "${ips[@]}"; do
-            echo "$ip"
+            echo "Printed : $ip"
           done
 
           # Loop through the IP addresses and run the update script
