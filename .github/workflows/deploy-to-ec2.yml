@@ -85,25 +85,28 @@ jobs:
       - name: Retrieve Autoscaling EC2 server IPs
         id: get_autoscaling_instances_ips
         run: |
-          echo "${{secrets.SHELL_SCRIPT_TEMPLATE}}" > update_instance.sh
-          cat update_instance.sh
-          chmod +x update_instance.sh
           aws autoscaling describe-auto-scaling-instances --query "AutoScalingInstances[*].InstanceId" --output text > autoscaling_instance_ids.txt 
           aws ec2 describe-instances --instance-ids $(cat autoscaling_instance_ids.txt) --query "Reservations[*].Instances[*].PublicIpAddress" --output text > autoscaling_instance_ips.txt
           cat autoscaling_instance_ips.txt
           ips_file="autoscaling_instance_ips.txt"
           mapfile -t ips < "$ips_file"          
-          # Debug output to verify IPs
-          echo "IP addresses read from file:"
-          for ip in "${ips[@]}"; do
-            echo "Printed : $ip"
-          done
 
           # Loop through the IP addresses and run the update script
           for ip in "${ips[@]}"; do
-            echo "Updating instance with IP: $ip"
-            echo $ip
-            ./update_instance.sh $ip
+            touch update_instance_$ip.sh
+            echo '#!/bin/bash' > "update_instance_$ip.sh"
+            echo '' >> update_instance_$ip.sh
+            echo "Updating instance with IP: $ip" >> "update_instance_$ip.sh"
+            echo "ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@$ip <<EOF" >> "update_instance_$ip.sh"
+            echo "docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest" >> "update_instance_$ip.sh"
+            echo "docker stop my-container || true" >> "update_instance_$ip.sh"
+            echo "docker rm my-container || true" >> "update_instance_$ip.sh"
+            echo "docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest" >> "update_instance_$ip.sh"
+            echo "EOF" >> "update_instance_$ip.sh"
+            echo "shell script created for $ip"
+            echo "Running shell script for $ip"
+            chmod +x "update_instance_$ip.sh"
+            ./update_instance_$ip.sh             
           done
 
 
