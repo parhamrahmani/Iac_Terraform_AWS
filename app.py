@@ -37,10 +37,11 @@ API_BASE_URL = 'https://api.spotify.com/v1/'
 def get_ip():
     response = urllib.request.urlopen('http://ipinfo.io/json')
     data = json.load(response)
+    print(data['ip'])
     return data['ip']
 
 
-REDIRECT_URI_REMOTE = f'http://{get_ip()}:5000/callback'
+REDIRECT_URI_REMOTE = f'http://{get_ip()}/callback'
 REDIRECT_URI = REDIRECT_URI_REMOTE if ENVIRONMENT == 'production' else REDIRECT_URI_LOCAL
 
 
@@ -347,4 +348,5 @@ def svg_display():
 
 
 if __name__ == '__main__':
+    get_ip()
     app.run(debug=True)
