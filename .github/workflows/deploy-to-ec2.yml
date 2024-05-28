@@ -93,15 +93,17 @@ jobs:
           cat autoscaling_instance_ips.txt
           ips_file="autoscaling_instance_ips.txt"
           mapfile -t ips < "$ips_file"          
+          # Debug output to verify IPs
+          echo "IP addresses read from file:"
+          for ip in "${ips[@]}"; do
+            echo "Printed : $ip"
+          done
+
           # Loop through the IP addresses and run the update script
           for ip in "${ips[@]}"; do
             echo "Updating instance with IP: $ip"
-            ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@$ip <<EOF
-                docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
-                docker stop my-container || true
-                docker rm my-container || true
-                docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
-          EOF
+            echo $ip
+            ./update_instance.sh $ip
           done
 
 
