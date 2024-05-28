@@ -43,3 +43,14 @@ resource "aws_subnet" "private_1" {
         Name = "private-subnet-1"
     }
 }
+
+resource "aws_subnet" "public_4" {
+  vpc_id = aws_vpc.main.id
+  cidr_block = "10.0.6.0/24"
+  availability_zone = "eu-central-1d"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "public-subnet-4"
+  }
+}

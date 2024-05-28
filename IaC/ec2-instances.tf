@@ -128,6 +128,36 @@ resource "aws_instance" "db-server" {
   }
 }
 
+# 4th EC2 instance
+resource "aws_instance" "ec2-4" {
+
+    ami = data.aws_ami.ubuntu.id
+    instance_type = "t2.micro"
+    subnet_id = aws_subnet.public_4.id
+    vpc_security_group_ids = [aws_security_group.ec2_security_group.id]
+    iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name
+    key_name = aws_key_pair.keypair.key_name
+    user_data = <<-EOF
+                    #!/bin/bash
+                    sudo apt update -y
+                    sudo apt install -y python3 python3-pip ca-certificates curl
+                    sudo mkdir -p /etc/apt/keyrings
+                    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+                    echo \
+                        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+                    sudo apt update
+                    sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+                    sudo usermod -aG docker ubuntu
+                    docker pull ${var.docker_hub_username}/flask-app-image-repository:latest
+                    docker run -d --name my-container -p 80:5000 ${var.docker_hub_username}/flask-app-image-repository:latest
+                    EOF
+
+    tags = {
+        Name = "ec2-4"
+    }
+
+}
+
 
 
 
