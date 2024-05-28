@@ -1076,7 +1076,7 @@ jobs:
             docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
           EOF
 
-      - name: Retrieve Autoscaling EC2 server IPs
+      - name: Retrieve Autoscaling EC2 server IPs and update them with new Docker image
         id: get_autoscaling_instances_ips
         run: |
           aws autoscaling describe-auto-scaling-instances --query "AutoScalingInstances[*].InstanceId" --output text > autoscaling_instance_ids.txt 
@@ -1124,9 +1124,8 @@ jobs:
   - Create SSH key file: This step creates an SSH key file based on the provided private key.
   - Set SSH key permissions: This step sets the permissions for the SSH key file.
   - Update EC2 with new Docker image: This step updates the EC2 instances with the new Docker image.
-  - Retrieve Autoscaling EC2 server IPs: This step retrieves the public IP addresses of the Autoscaling EC2 instances.
-  - Update Autoscaling EC2 with new Docker image: This step updates the Autoscaling EC2 instances with the new Docker image.
-  - Update database server with new Docker image: This step updates the database server with the new Docker image.
+  - Retrieve Autoscaling EC2 server IPs and update them with new Docker imaage:
+     - Basically retrieves the autoscaling instances and updates them with the new docker image by making a shell script
 
 ##### Why is the building and pushing and updating the image of database in not included in the workflow?
 
