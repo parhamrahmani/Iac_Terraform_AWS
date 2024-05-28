@@ -81,19 +81,6 @@ jobs:
             docker rm my-container || true
             docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
           EOF
-      - name: Define shell script function
-        run: |
-          echo 'update_instance() {
-          local ip=$1
-          ssh -o StrictHostKeyChecking=no -i /home/runner/.ssh/id_rsa ubuntu@$ip <<EOF
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
-            docker stop my-container || true
-            docker rm my-container || true
-            docker run -d --name my-container -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/flask-app-image-repository:latest
-            EOF
-            echo "Updated instance with IP: $ip"
-            }' > $BASH_ENV
-            source $BASH_ENV
 
       - name: Retrieve Autoscaling EC2 server IPs
         id: get_autoscaling_instances_ips
@@ -103,7 +90,6 @@ jobs:
           ips_file="autoscaling_instance_ips.txt"
           mapfile -t ips < "$ips_file"          
           for ip in "${ips[@]}"; do
-            update_instance $ip
             touch update_instance_$ip.sh
             echo '#!/bin/bash' > "update_instance_$ip.sh"
             echo '' >> update_instance_$ip.sh
