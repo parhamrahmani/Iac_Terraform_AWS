@@ -9,3 +9,4 @@ python-dotenv~=1.0.0
 Markdown~=3.6
 Pygments~=2.18.0
 requests~=2.31.0
+mysql-connector-python~=8.4.0

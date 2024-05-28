@@ -1,6 +1,7 @@
 import os
 import urllib
-
+import mysql.connector
+from mysql.connector import Error
 import markdown
 from markdown.extensions.codehilite import CodeHiliteExtension
 import json
@@ -43,6 +44,50 @@ def get_ip():
 
 REDIRECT_URI_REMOTE = f'http://{get_ip()}/callback'
 REDIRECT_URI = REDIRECT_URI_REMOTE if ENVIRONMENT == 'production' else REDIRECT_URI_LOCAL
+
+
+def create_db_connection():
+    try:
+        connection = mysql.connector.connect(
+            host=os.getenv('EC2_dbs_IP'),
+            user=os.getenv('MYSQL_USER'),
+            password=os.getenv('MYSQL_PASSWORD'),
+            database=os.getenv('MYSQL_DATABASE')
+        )
+        if connection.is_connected():
+            print("Connected to MySQL database")
+            return connection
+    except Error as e:
+        print(f"Error: {e}")
+        return None
+
+
+@app.route("/save_recommendations", methods=['POST'])
+def save_recommendations():
+    data = request.json
+    connection = create_db_connection()
+    if connection is None:
+        return "Failed to connect to the database", 500
+
+    cursor = connection.cursor()
+    insert_query = """
+    INSERT INTO recommendations (user_id, seed_tracks, market, min_energy, max_energy, target_popularity,
+                                 target_acousticness, target_instrumentalness, target_tempo, song_title,
+                                 album_title, year, artist_name)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+
+    for rec in data['recommendations']:
+        cursor.execute(insert_query, (
+            data['user_id'], data['seed_tracks'], data['market'], data['min_energy'], data['max_energy'],
+            data['target_popularity'], data['target_acousticness'], data['target_instrumentalness'],
+            data['target_tempo'], rec['song_title'], rec['album_title'], rec['year'], rec['artist_name']
+        ))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return jsonify({'message': 'Recommendations saved successfully'})
 
 
 @app.route("/")
