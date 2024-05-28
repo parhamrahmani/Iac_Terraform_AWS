@@ -1,4 +1,6 @@
 import os
+import urllib
+
 import markdown
 from markdown.extensions.codehilite import CodeHiliteExtension
 import json
@@ -22,8 +24,6 @@ CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
 CLIENT_SECRET = os.getenv('SPOTIFY_SECRET_ID')
 ENVIRONMENT = os.getenv('ENVIRONMENT')
 REDIRECT_URI_LOCAL = 'http://127.0.0.1:5000/callback'
-REDIRECT_URI_REMOTE = 'http://18.156.114.112/callback'
-REDIRECT_URI = REDIRECT_URI_REMOTE if ENVIRONMENT == 'production' else REDIRECT_URI_LOCAL
 SCOPE = ('user-read-private user-read-email user-library-read user-top-read playlist-modify-public '
          'playlist-modify-private')
 
@@ -31,6 +31,17 @@ STATE_KEY = 'spotify_auth_state'
 AUTH_URL = 'https://accounts.spotify.com/authorize'
 TOKEN_URL = 'https://accounts.spotify.com/api/token'
 API_BASE_URL = 'https://api.spotify.com/v1/'
+
+
+# fetch current app's ip address that is running on
+def get_ip():
+    response = urllib.request.urlopen('http://ipinfo.io/json')
+    data = json.load(response)
+    return data['ip']
+
+
+REDIRECT_URI_REMOTE = f'http://{get_ip()}:5000/callback'
+REDIRECT_URI = REDIRECT_URI_REMOTE if ENVIRONMENT == 'production' else REDIRECT_URI_LOCAL
 
 
 @app.route("/")
