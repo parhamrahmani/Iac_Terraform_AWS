@@ -1,7 +1,5 @@
 # IaC on AWS using Terraforn and ci/cd pipeline using Github Actions
 
-### Parham Rahmani 580200 SoSe 2024
-
 
 ## <a id="description"></a>Description
 
